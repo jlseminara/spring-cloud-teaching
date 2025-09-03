@@ -1,0 +1,27 @@
+{
+  "name": "Consumer Api",
+  "slug": "consumer",
+  "api_id": "consumer",
+  "use_keyless": true,
+  "org_id": "1",
+  
+  "version_data": {
+    "not_versioned": true,
+    "versions": {
+      "Default": {
+        "name": "Default",
+        "use_extended_paths": true
+      }
+    }
+  },
+  
+  "proxy": {
+    "listen_path": "/consumer",
+    "strip_listen_path": true,
+    "target_url": "http://consumer:8080",
+	"enable_load_balancing": true,
+    "target_list": ["http://consumer:8080"]
+  },
+
+  "active": true
+}

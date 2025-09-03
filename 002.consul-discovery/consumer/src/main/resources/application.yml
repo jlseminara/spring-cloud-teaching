@@ -1,0 +1,42 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: consumer
+  cloud:
+    loadbalancer:
+      ribbon:
+        enabled: false
+    consul:
+      host: localhost
+      port: 8500
+      discovery:
+        heartbeat:
+          enabled: true
+          ttl: 10s
+        register: true
+        enabled: true
+        instance-id: ${spring.application.name}:${random.value}
+        health-check-critical-timeout: 5s
+        health-check-path: /actuator/health
+        health-check-interval: 10s
+        health-check-timeout: 3s
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: basic
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+

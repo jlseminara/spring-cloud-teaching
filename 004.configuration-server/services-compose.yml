@@ -1,0 +1,103 @@
+
+services:
+  consul:
+    image: consul:1.15
+    container_name: consul-container
+    command: "agent -server -bootstrap -client=0.0.0.0 -ui"
+    ports:
+      - "8500:8500"   # UI y API HTTP
+      - "8600:8600"   # DNS
+      - "8600:8600/udp"
+    networks:
+       main-default-net:
+         ipv4_address: 192.168.50.2
+          
+  redis:
+    image: redis:alpine
+    container_name: redis-container
+    ports:
+      - "6379:6379"
+    networks:
+      - main-default-net
+      
+  tyk-gateway:
+    image: tykio/tyk-gateway:v5.8.5
+    container_name: tyk-container
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVICE_DISCOVERY_PROVIDER=consul
+      - CONSUL_ADDRESS=192.168.50.2:8500
+      - TYK_GW_SECRET=SOME_SECRET
+    depends_on:
+      consul:
+        condition: service_started
+      redis:
+        condition: service_started
+    volumes:
+      - ./producer-api.json:/opt/tyk-gateway/apps/producer-api.json
+      - ./consumer-api.json:/opt/tyk-gateway/apps/consumer-api.json
+      - ./tyk.conf:/opt/tyk-gateway/tyk.conf
+    networks:
+       main-default-net:
+         ipv4_address: 192.168.50.20
+         
+  configserver:
+    image: configserver:latest
+    container_name: configserver-container
+    ports:
+      - "8090:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/producer/prod"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - ./config-files:/config-files
+    networks:
+       main-default-net:
+         ipv4_address: 192.168.50.25
+
+  producer:
+    image: producer:latest
+    container_name: producer-container
+    ports:
+      - "8081:8080"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      consul:
+        condition: service_started
+      tyk-gateway:
+        condition: service_started
+    networks:
+       main-default-net:
+          ipv4_address: 192.168.50.10
+
+  consumer:
+    image: consumer:latest
+    container_name: consumer-container
+    ports:
+      - "8082:8080"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      consul:
+        condition: service_started
+      tyk-gateway:
+        condition: service_started
+    networks:
+       main-default-net:
+          ipv4_address: 192.168.50.11
+
+
+networks:
+  main-default-net:
+    driver: bridge
+    ipam:
+       config:
+          - subnet: 192.168.50.0/24
+
+volumes:
+  kong_data:
+

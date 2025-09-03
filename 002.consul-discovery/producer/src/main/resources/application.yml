@@ -1,0 +1,28 @@
+
+spring:
+  application:
+    name: producer
+  cloud:
+    consul:
+      host: localhost
+      port: 8500
+      discovery:
+        heartbeat:
+          enabled: true
+          ttl: 10s
+        register: true
+        enabled: true
+        instance-id: ${spring.application.name}:${random.value}
+        health-check-critical-timeout: 5s
+        health-check-path: /actuator/health
+        health-check-interval: 10s
+        health-check-timeout: 3s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

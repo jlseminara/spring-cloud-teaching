@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: consumer
+  profiles:
+    active: prod
+  config:
+    import: optional:configserver:http://configserver:8080
