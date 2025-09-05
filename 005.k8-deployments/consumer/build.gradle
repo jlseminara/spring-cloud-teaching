@@ -48,7 +48,7 @@ tasks.named('test') {
 
 docker {
     springBootApplication {
-        baseImage = 'amazoncorretto:21'
+        baseImage = 'gcr.io/distroless/java21-debian12'
         maintainer = 'Leonardo Seminara'
         ports = [8080]
         images = ["consumer"]
