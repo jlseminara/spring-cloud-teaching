@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tyk-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tyk-app
+  template:
+    metadata:
+      labels:
+        app: tyk-app
+    spec:
+      initContainers:
+        - name: check-consul
+          image: appropriate/curl  # Imagen ligera con curl
+          command: ['sh', '-c', 'until curl -f http://consul-service:8500/v1/status/leader; do echo "Esperando a Consul..."; sleep 2; done;']
+        #- name: check-redis
+        #  image: redis:alpine
+        #  command: ['sh', '-c', 'until redis-cli -h redis ping | grep "PONG"; do echo "Esperando a Redis..."; sleep 2; done;']
+      containers:
+      - name: tyk-container
+        image: tykio/tyk-gateway:v5.8.5
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SERVICE_DISCOVERY_PROVIDER
+          value: conul
+        - name: CONSUL_ADDRESS
+          value: consul-service:8500
+        - name: TYK_GW_SECRET
+          value: SOME_SECRET
+        livenessProbe:
+          httpGet:
+            path: /hello
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /hello
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: config-volume
+          mountPath: /opt/tyk-gateway/apps/consumer-api.json
+          subPath: consumer-api.json
+        - name: config-volume
+          mountPath: /opt/tyk-gateway/apps/producer-api.json
+          subPath: producer-api.json
+        - name: config-volume
+          mountPath: /opt/tyk-gateway/tyk.conf
+          subPath: tyk.conf
+      volumes:
+      - name: config-volume
+        persistentVolumeClaim:
+          claimName: configuration-pvc
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: tyk-service
+spec:
+  type: ClusterIP
+  selector:
+    app: tyk-app
+  ports:
+  - name: puerto-http
+    protocol: TCP
+    port: 8080
+    targetPort: 8080
+

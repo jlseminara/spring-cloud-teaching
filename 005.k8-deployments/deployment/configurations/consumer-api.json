@@ -1,0 +1,38 @@
+{
+  "name": "Consumer Api",
+  "slug": "consumer",
+  "api_id": "consumer",
+  "use_keyless": true,
+  "org_id": "1",
+  
+  "version_data": {
+    "not_versioned": true,
+    "versions": {
+      "Default": {
+        "name": "Default",
+        "use_extended_paths": true
+      }
+    }
+  },
+  
+  "proxy": {
+    "listen_path": "/consumer",
+	"strip_listen_path": true,
+	
+    "use_service_discovery": true,
+	  "service_discovery": {
+		"use_discovery_service": true,
+		"query_endpoint": "http://consul-service:8500/v1/catalog/service/consumerservice",
+		"cache_timeout": 30,
+		"use_nested_query": false,
+		"parent_data_path": "",
+		"data_path": "ServiceAddress",
+		"port_data_path": "ServicePort",
+		"endpoint_returns_list": true,
+		"use_target_list": false
+	  }
+
+  },
+
+  "active": true
+}

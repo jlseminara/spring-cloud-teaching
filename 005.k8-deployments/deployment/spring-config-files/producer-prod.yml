@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: producer
+  cloud:
+    inetutils:
+      ignored-interfaces: docker0
+    consul:
+      host: consul-service
+      port: 8500
+      config:
+        enabled: false
+      discovery:
+        service-name: "${spring.application.name}service"
+        instance-id: ${spring.application.name}:${random.value}
+        prefer-ip-address: true
+        heartbeat:
+          enabled: true
+          ttl: 10s
+        register: true
+        enabled: true
+        health-check-critical-timeout: 10s
+        health-check-path: /actuator/health
+        health-check-interval: 20s
+        health-check-timeout: 10s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

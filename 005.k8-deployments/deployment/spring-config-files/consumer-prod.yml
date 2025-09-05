@@ -1,0 +1,50 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: consumer
+  cloud:
+    inetutils:
+      ignored-interfaces: docker0
+    loadbalancer:
+      ribbon:
+        enabled: false
+    consul:
+      host: consul-service
+      port: 8500
+      config:
+        enabled: false
+      discovery:
+        service-name: "${spring.application.name}service"
+        instance-id: ${spring.application.name}:${random.value}
+        prefer-ip-address: true
+        heartbeat:
+          enabled: true
+          ttl: 10s
+        register: true
+        enabled: true
+        health-check-critical-timeout: 10s
+        health-check-path: /actuator/health
+        health-check-interval: 20s
+        health-check-timeout: 10s
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: basic
+      producer:
+        url: http://tyk-service:8080/producer    # address and path where tyke gateway has the producer registered
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
